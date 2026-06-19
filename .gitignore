@@ -1,0 +1,16 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.python-version
+
+# Agent scratch / temp
+tmp/
+
+# Local AWS / env
+.env
+*.local
+
+# OS
+.DS_Store
