@@ -14,6 +14,7 @@ Usage:
   python teardown_check.py --profile scs-member            # report only
   python teardown_check.py --profile scs-member --apply    # also disable detectors
 """
+
 import argparse
 import sys
 
@@ -29,24 +30,43 @@ def safe(fn):
         return {"_error": e.response["Error"]["Code"]}
 
 
+def ids(resp: dict, list_key: str, id_key: str) -> list:
+    """Pull a list of id_key values from resp[list_key]; [] if the call errored."""
+    if "_error" in resp:
+        return []
+    return [item[id_key] for item in resp.get(list_key, [])]
+
+
+def confirm(prompt: str) -> bool:
+    return input(prompt).strip().lower() == "y"
+
+
 def report(session) -> dict:
     out = {}
     ec2 = session.client("ec2")
-    res = safe(lambda: ec2.describe_instances(
-        Filters=[{"Name": "instance-state-name", "Values": ["running"]}]))
-    out["running_instances"] = [
-        i["InstanceId"] for r in res.get("Reservations", []) for i in r.get("Instances", [])
-    ] if "_error" not in res else []
+    res = safe(
+        lambda: ec2.describe_instances(
+            Filters=[{"Name": "instance-state-name", "Values": ["running"]}]
+        )
+    )
+    out["running_instances"] = (
+        [i["InstanceId"] for r in res.get("Reservations", []) for i in r.get("Instances", [])]
+        if "_error" not in res
+        else []
+    )
 
     # NOTE: describe_nat_gateways uses "Filter" (singular) -- an intentional EC2
     # API quirk, unlike describe_instances which uses "Filters". Do not "fix" it.
-    nat = safe(lambda: ec2.describe_nat_gateways(
-        Filter=[{"Name": "state", "Values": ["available", "pending"]}]))
-    out["nat_gateways"] = [n["NatGatewayId"] for n in nat.get("NatGateways", [])] if "_error" not in nat else []
+    nat = safe(
+        lambda: ec2.describe_nat_gateways(
+            Filter=[{"Name": "state", "Values": ["available", "pending"]}]
+        )
+    )
+    out["nat_gateways"] = ids(nat, "NatGateways", "NatGatewayId")
 
     elb = session.client("elbv2")
     lbs = safe(lambda: elb.describe_load_balancers())
-    out["load_balancers"] = [lb["LoadBalancerArn"] for lb in lbs.get("LoadBalancers", [])] if "_error" not in lbs else []
+    out["load_balancers"] = ids(lbs, "LoadBalancers", "LoadBalancerArn")
 
     gd = session.client("guardduty")
     dets = safe(lambda: gd.list_detectors())
@@ -54,9 +74,11 @@ def report(session) -> dict:
 
     cfg = session.client("config")
     recs = safe(lambda: cfg.describe_configuration_recorder_status())
-    out["config_recorders_recording"] = [
-        r["name"] for r in recs.get("ConfigurationRecordersStatus", []) if r.get("recording")
-    ] if "_error" not in recs else []
+    out["config_recorders_recording"] = (
+        [r["name"] for r in recs.get("ConfigurationRecordersStatus", []) if r.get("recording")]
+        if "_error" not in recs
+        else []
+    )
 
     macie = session.client("macie2")
     mst = safe(lambda: macie.get_macie_session())
@@ -66,19 +88,22 @@ def report(session) -> dict:
     keys = safe(lambda: kms.list_keys())
     # Only customer keys cost money; we can't cheaply filter AWS-managed here, so
     # we just count and let you inspect. Print IDs, never key material.
-    out["kms_key_ids"] = [k["KeyId"] for k in keys.get("Keys", [])] if "_error" not in keys else []
+    out["kms_key_ids"] = ids(keys, "Keys", "KeyId")
 
     sm = session.client("secretsmanager")
     secs = safe(lambda: sm.list_secrets())
-    out["secret_names"] = [s["Name"] for s in secs.get("SecretList", [])] if "_error" not in secs else []
+    out["secret_names"] = ids(secs, "SecretList", "Name")
     return out
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--profile", default=None)
-    p.add_argument("--apply", action="store_true",
-                   help="Disable detectors (GuardDuty/Config/Macie). Confirms per service.")
+    p.add_argument(
+        "--apply",
+        action="store_true",
+        help="Disable detectors (GuardDuty/Config/Macie). Confirms per service.",
+    )
     args = p.parse_args()
 
     session = boto3.Session(profile_name=args.profile)
@@ -94,19 +119,19 @@ def main() -> int:
         return 0
 
     # Disabling actions, each confirmed.
-    if data["guardduty_detectors"] and input("Suspend GuardDuty detector(s)? [y/N] ").lower() == "y":
+    if data["guardduty_detectors"] and confirm("Suspend GuardDuty detector(s)? [y/N] "):
         gd = session.client("guardduty")
         for d in data["guardduty_detectors"]:
             # Suspend (reversible, stops billing) rather than delete_detector
             # (permanent, wipes config) -- you re-enable in Phase 4.
             gd.update_detector(DetectorId=d, Enable=False)
             print(f"  suspended GuardDuty detector {d}")
-    if data["config_recorders_recording"] and input("Stop Config recorder(s)? [y/N] ").lower() == "y":
+    if data["config_recorders_recording"] and confirm("Stop Config recorder(s)? [y/N] "):
         cfg = session.client("config")
         for name in data["config_recorders_recording"]:
             cfg.stop_configuration_recorder(ConfigurationRecorderName=name)
             print(f"  stopped Config recorder {name}")
-    if data["macie_enabled"] and input("Disable Macie? [y/N] ").lower() == "y":
+    if data["macie_enabled"] and confirm("Disable Macie? [y/N] "):
         session.client("macie2").disable_macie()
         print("  disabled Macie")
 

@@ -20,6 +20,7 @@ Usage:
   # Recreate the real lockout (no admin) -- requires explicit confirmation:
   python kms_lockout_demo.py ... --apply --full-lockout
 """
+
 import argparse
 import json
 import sys
@@ -61,8 +62,11 @@ def main() -> int:
     p.add_argument("--app-role", default="AppEncryptRole")
     p.add_argument("--profile", default=None)
     p.add_argument("--apply", action="store_true", help="Actually create (default: dry run)")
-    p.add_argument("--full-lockout", action="store_true",
-                   help="Omit the root admin statement -> true lockout (Support-only recovery)")
+    p.add_argument(
+        "--full-lockout",
+        action="store_true",
+        help="Omit the root admin statement -> true lockout (Support-only recovery)",
+    )
     args = p.parse_args()
 
     policy = build_policy(args.account_b, args.app_role, args.full_lockout)
@@ -99,9 +103,9 @@ def main() -> int:
     meta = resp["KeyMetadata"]
     print(f"\n[ok] Created key. KeyId={meta['KeyId']}  Arn={meta['Arn']}")
     if not args.full_lockout:
-        print("Try `aws kms enable-key-rotation --key-id <KeyId>` -- it should SUCCEED (you kept admin).")
+        print("Try enable-key-rotation on the KeyId -- should SUCCEED (you kept admin).")
     else:
-        print("Try `aws kms enable-key-rotation --key-id <KeyId>` -- it should FAIL (no admin).")
+        print("Try enable-key-rotation on the KeyId -- should FAIL (no admin).")
     print("Cleanup: aws kms schedule-key-deletion --key-id <KeyId> --pending-window-in-days 7")
     return 0
 

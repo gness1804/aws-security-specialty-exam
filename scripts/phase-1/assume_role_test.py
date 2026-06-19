@@ -12,6 +12,7 @@ Usage:
       --role-arn arn:aws:iam::222222222222:role/CrossAccountAuditRole \
       --profile scs-mgmt --mfa-serial arn:aws:iam::111111111111:mfa/analyst
 """
+
 import argparse
 import sys
 
@@ -23,7 +24,9 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--role-arn", required=True)
     p.add_argument("--profile", default=None, help="Account A profile doing the assume")
-    p.add_argument("--mfa-serial", default=None, help="MFA device ARN (omit to test the no-MFA denial)")
+    p.add_argument(
+        "--mfa-serial", default=None, help="MFA device ARN (omit to test the no-MFA denial)"
+    )
     p.add_argument("--session-name", default="phase1-test")
     args = p.parse_args()
 

@@ -1,0 +1,8 @@
+# Ruff config for the SCS-C03 study scripts.
+# Wired into the pre-commit hook (ruff check + ruff format --check on changed .py).
+target-version = "py311"
+line-length = 100
+
+[lint]
+# E/W: pycodestyle (PEP 8), F: pyflakes, I: isort, B: bugbear, UP: pyupgrade.
+select = ["E", "W", "F", "I", "B", "UP"]

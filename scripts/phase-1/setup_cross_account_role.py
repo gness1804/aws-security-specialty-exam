@@ -15,6 +15,7 @@ Usage:
   # Actually create it:
   python setup_cross_account_role.py ... --apply
 """
+
 import argparse
 import json
 import sys
