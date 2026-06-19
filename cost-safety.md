@@ -56,15 +56,15 @@ Watch these specifically — they bill by the hour or by the GB whether or not y
 | Resource | Appears in | Cost note | Teardown |
 |----------|-----------|-----------|----------|
 | **NAT Gateway** | any VPC lab with private subnets | ~$0.045/hr + data | Delete the NAT GW, release the EIP |
-| **Application Load Balancer** | Phase 6 WAF, Phase 3 ACM | ~$0.0225/hr + LCU | Delete the ALB |
-| **GuardDuty** | Phase 4 | 30-day free trial, then per-event | Disable the detector when done |
-| **Config recorder** | Phase 4, 7 | per configuration item recorded | Stop the recorder, delete delivery channel |
-| **Macie** | Phase 3 | per-GB classified; sample-data jobs are cheap | Disable Macie |
-| **Detective** | Phase 4 stretch | 30-day trial, then per-GB ingested | Disable the graph |
-| **Inspector** | Phase 4 | per-instance / per-image scanned | Disable Inspector |
-| **KMS CMK** | Phase 1, 3 | $1/month per key + per-request | Schedule key deletion (7–30 day window) |
-| **Secrets Manager secret** | Phase 3 | $0.40/secret/month + per-10k API calls | Delete the secret (force, no recovery window) |
-| **VPC Flow Logs / CloudTrail to S3** | Phase 6 | S3 storage + data scanned by Athena | Delete log objects when done; lifecycle-expire |
+| **Application Load Balancer** | Phase 4 WAF, Phase 2 ACM | ~$0.0225/hr + LCU | Delete the ALB |
+| **GuardDuty** | Phase 3 | 30-day free trial, then per-event | Disable the detector when done |
+| **Config recorder** | Phase 3, 5 | per configuration item recorded | Stop the recorder, delete delivery channel |
+| **Macie** | Phase 2 | per-GB classified; sample-data jobs are cheap | Disable Macie |
+| **Detective** | Phase 3 stretch | 30-day trial, then per-GB ingested | Disable the graph |
+| **Inspector** | Phase 3 | per-instance / per-image scanned | Disable Inspector |
+| **KMS CMK** | Phase 1, 2 | $1/month per key + per-request | Schedule key deletion (7–30 day window) |
+| **Secrets Manager secret** | Phase 2 | $0.40/secret/month + per-10k API calls | Delete the secret (force, no recovery window) |
+| **VPC Flow Logs / CloudTrail to S3** | Phase 4 | S3 storage + data scanned by Athena | Delete log objects when done; lifecycle-expire |
 
 > **GuardDuty, Config, Macie, Inspector, Detective, Security Hub** all keep
 > billing after a lab ends because they run continuously. The teardown checklist
@@ -85,7 +85,7 @@ phase-specific teardown; this is the cross-cutting sweep.
       recorder, Macie, Inspector, Detective, Security Hub.
 - [ ] Schedule deletion of KMS CMKs you no longer need (min 7-day window).
 - [ ] Delete Secrets Manager secrets you no longer need.
-- [ ] Empty + delete throwaway S3 buckets (mind Object Lock in Phase 6 — those
+- [ ] Empty + delete throwaway S3 buckets (mind Object Lock in Phase 4 — those
       are deliberately undeletable for a retention window).
 - [ ] Check Cost Explorer for anything still accruing.
 

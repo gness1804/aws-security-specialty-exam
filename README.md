@@ -17,7 +17,9 @@ you that engineer.
 README.md            <- you are here: index, domain map, 8-week tracker
 cost-safety.md       <- READ THIS FIRST. Budget alarms + teardown discipline.
 reading-list.md      <- the disciplined 20%: whitepapers + doc sections, time-boxed
-labs/                <- one markdown lab guide per phase (step-by-step)
+labs/                <- one markdown lab guide per phase (poses the challenges)
+answers/             <- one answer key per phase, keyed to the lab's challenge IDs
+policies/            <- canonical paste-ready policy JSON (part of the answer key)
 scripts/             <- runnable Boto3 + bash starters, each with --dry-run + teardown
 ```
 
@@ -25,12 +27,25 @@ Work through phases in order. Each lab guide follows the same template:
 
 1. **Exam domain tag** — which SCS-C03 domain(s) this trains.
 2. **Why the exam cares** — the question patterns this defends against.
-3. **Prerequisites** — accounts, IAM, prior labs.
-4. **Build it** — console + CLI step-by-step.
-5. **Policies / code** — paste-ready JSON and Boto3.
-6. **Break it / Fix it** — the drill that actually cements the learning.
-7. **Verify** — how to prove it works (and how the exam would phrase the failure).
-8. **Tear it down** — stop the billing, reset for the next lab.
+3. **Prerequisites** — accounts, IAM, prior labs (given in full — setup, not a drill).
+4. **Build challenge** — *you* write the policy / architecture; CLI/script is primary,
+   console called out only where the exam tests a console-specific behavior.
+5. **Break it / Fix it** — the drill that actually cements the learning.
+6. **Verify** — how to prove it works (and how the exam would phrase the failure).
+7. **Tear it down** — stop the billing, reset for the next lab (given in full).
+
+### How the answer-separation works (this is an active-recall course)
+
+The labs **pose challenges and stop** — they don't hand you the policy JSON or the
+explanation next to the question. Try to produce the answer yourself first; that
+struggle is what makes it stick on exam day. Each challenge carries an ID
+(e.g. **B1.1**, **D1.2**). When you're done or stuck, check your work against:
+
+- `answers/phase-N-answers.md` — reference solutions, explanations, drill answers.
+- `policies/phase-N/` — the canonical policy JSON as paste-ready files.
+
+Only **Prerequisite/setup** and **Teardown** give full inline steps — they're
+housekeeping, not exam concepts.
 
 ### Lab difficulty tiers
 
@@ -48,18 +63,20 @@ SCS-C03 has six domains. This is the official weighting and where each is traine
 
 | # | Domain | Weight | Primarily trained in |
 |---|--------|--------|----------------------|
-| 1 | Threat Detection & Incident Response | 14% | Phase 4 (GuardDuty, Detective, EventBridge), Phase 8 (RCA) |
-| 2 | Security Logging & Monitoring | 18% | Phase 6 (CloudTrail, Athena, Flow Logs, CW alarms) |
-| 3 | Infrastructure Security | 20% | Phase 4–6 (Security groups/NACLs, WAF, VPC endpoints) |
-| 4 | Identity & Access Management | 16% | Phase 1 (cross-account IAM), Phase 7 (SCPs) |
-| 5 | Data Protection | 18% | Phase 1 (KMS), Phase 3 (Secrets Manager, ACM, Macie, S3) |
-| 6 | Management & Security Governance | 14% | Phase 7 (SCPs, Config aggregators, Security Hub) |
+| 1 | Threat Detection & Incident Response | 14% | Phase 3 (GuardDuty, Detective, EventBridge), Phase 6 (RCA) |
+| 2 | Security Logging & Monitoring | 18% | Phase 4 (CloudTrail, Athena, Flow Logs, CW alarms) |
+| 3 | Infrastructure Security | 20% | Phase 3–4 (Security groups/NACLs, WAF, VPC endpoints) |
+| 4 | Identity & Access Management | 16% | Phase 1 (cross-account IAM), Phase 5 (SCPs) |
+| 5 | Data Protection | 18% | Phase 1 (KMS), Phase 2 (Secrets Manager, ACM, Macie, S3) |
+| 6 | Management & Security Governance | 14% | Phase 5 (SCPs, Config aggregators, Security Hub) |
 
 ---
 
 ## The 8-week plan (Core / Stretch tracker)
 
-Check items off as you complete them. Stretch labs are in _italics_.
+Phases are numbered **sequentially 1–6**; the week range each one covers is shown
+in its heading (some phases span two weeks). Check items off as you complete them.
+Stretch labs are in _italics_.
 
 ### Phase 1 — Preventative architecture: IAM & KMS (Weeks 1–2)
 - [ ] 1.1 Cross-account IAM role: MFA + IP-restricted AssumeRole — **Core**
@@ -67,38 +84,34 @@ Check items off as you complete them. Stretch labs are in _italics_.
 - [ ] 1.2 KMS CMK deliberate lockout + emergency recovery — **Core**
 - [ ] _1.2b Multi-condition key grant (ViaService + encryption context) — **Stretch**_
 
-### Phase 2 — (folded into Phase 1's two weeks; see Phase 1 guide)
+### Phase 2 — Data protection gap-fill (Week 3)
+- [ ] 2.1 Secrets Manager with automatic rotation (Lambda) — **Core**
+- [ ] 2.2 ACM cert + enforce TLS on an ALB / S3 (HTTPS-only) — **Core**
+- [ ] 2.3 S3 default encryption + bucket-key + deny-unencrypted-PutObject — **Core**
+- [ ] _2.4 Macie sensitive-data discovery job on a seeded bucket — **Stretch**_
 
-### Phase 3 — Data protection gap-fill (Week 3)
-- [ ] 3.1 Secrets Manager with automatic rotation (Lambda) — **Core**
-- [ ] 3.2 ACM cert + enforce TLS on an ALB / S3 (HTTPS-only) — **Core**
-- [ ] 3.3 S3 default encryption + bucket-key + deny-unencrypted-PutObject — **Core**
-- [ ] _3.4 Macie sensitive-data discovery job on a seeded bucket — **Stretch**_
+### Phase 3 — Detection & automated remediation (Weeks 4–5)
+- [ ] 3.1 Config rule `s3-bucket-public-read-prohibited` + SSM auto-remediation — **Core**
+- [ ] 3.2 Custom Boto3 Lambda Config rule: kill SSH/RDP 0.0.0.0/0 ingress — **Core**
+- [ ] 3.3 GuardDuty -> EventBridge -> Lambda -> NACL block of malicious IP — **Core**
+- [ ] 3.4 Security Hub as single pane of glass + Inspector findings — **Core**
+- [ ] _3.5 Detective investigation of a GuardDuty finding — **Stretch**_
 
-### Phase 4 — Detection & automated remediation (Weeks 4–5)
-- [ ] 4.1 Config rule `s3-bucket-public-read-prohibited` + SSM auto-remediation — **Core**
-- [ ] 4.2 Custom Boto3 Lambda Config rule: kill SSH/RDP 0.0.0.0/0 ingress — **Core**
-- [ ] 4.3 GuardDuty -> EventBridge -> Lambda -> NACL block of malicious IP — **Core**
-- [ ] 4.4 Security Hub as single pane of glass + Inspector findings — **Core**
-- [ ] _4.5 Detective investigation of a GuardDuty finding — **Stretch**_
+### Phase 4 — Perimeter defense & logging integrity (Week 6)
+- [ ] 4.1 WAF Web ACL blocking XSS + SQLi on an ALB — **Core**
+- [ ] 4.2 Org-wide CloudTrail to isolated logging account + log-file validation — **Core**
+- [ ] 4.3 S3 bucket policy: deny `s3:DeleteObject` even to root (Object Lock) — **Core**
+- [ ] 4.4 Athena queries over CloudTrail + VPC Flow Logs — **Core**
+- [ ] _4.5 CloudWatch Logs metric filter + alarm on root login / IAM changes — **Stretch**_
 
-### Phase 5 — (folded into Phase 4's two weeks; see Phase 4 guide)
-
-### Phase 6 — Perimeter defense & logging integrity (Week 6)
-- [ ] 6.1 WAF Web ACL blocking XSS + SQLi on an ALB — **Core**
-- [ ] 6.2 Org-wide CloudTrail to isolated logging account + log-file validation — **Core**
-- [ ] 6.3 S3 bucket policy: deny `s3:DeleteObject` even to root (Object Lock) — **Core**
-- [ ] 6.4 Athena queries over CloudTrail + VPC Flow Logs — **Core**
-- [ ] _6.5 CloudWatch Logs metric filter + alarm on root login / IAM changes — **Stretch**_
-
-### Phase 7 — Governance & guardrails (Week 7)
-- [ ] 7.1 SCPs: deny region, deny disabling CloudTrail/GuardDuty, require MFA — **Core**
-- [ ] 7.2 Config aggregator across the org + conformance pack — **Core**
+### Phase 5 — Governance & guardrails (Week 7)
+- [ ] 5.1 SCPs: deny region, deny disabling CloudTrail/GuardDuty, require MFA — **Core**
+- [ ] 5.2 Config aggregator across the org + conformance pack — **Core**
 - [ ] Begin timed full-length practice exam #1 — **Core**
 
-### Phase 8 — Validation & exam mindset (Week 8)
-- [ ] 8.1 Root-cause-analysis drill: recreate every missed question in console — **Core**
-- [ ] 8.2 IAM Policy Simulator + CloudTrail error-string drills — **Core**
+### Phase 6 — Validation & exam mindset (Week 8)
+- [ ] 6.1 Root-cause-analysis drill: recreate every missed question in console — **Core**
+- [ ] 6.2 IAM Policy Simulator + CloudTrail error-string drills — **Core**
 - [ ] Timed full-length practice exams #2 and #3, review to >85% — **Core**
 
 ---

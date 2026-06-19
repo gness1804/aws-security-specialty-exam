@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TrustAnyOrgPrincipalWithMFA",
+      "Effect": "Allow",
+      "Principal": { "AWS": "*" },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": { "aws:PrincipalOrgID": "o-xxxxxxxxxx" },
+        "Bool": { "aws:MultiFactorAuthPresent": "true" }
+      }
+    }
+  ]
+}
