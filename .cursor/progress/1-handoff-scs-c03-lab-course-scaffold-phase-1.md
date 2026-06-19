@@ -1,3 +1,6 @@
+---
+github_issue: 1
+---
 # Handoff Scs C03 Lab Course Scaffold Phase 1
 
 ## Working directory
