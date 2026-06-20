@@ -73,7 +73,9 @@ history. End-to-end is typically a few minutes, not instant.
    `config:PutEvaluations` plus CloudWatch Logs; and **Config must be allowed to
    invoke the Lambda** — a Lambda **resource policy** granting
    `config.amazonaws.com` `lambda:InvokeFunction` (the `setup_custom_config_rule.py`
-   script adds it with `add_permission`).
+   script adds it with `add_permission`, scoped with **`SourceAccount`** so only
+   *this* account's Config can invoke it — the confused-deputy guard for a service
+   principal that doesn't pass a per-resource `SourceArn`).
 
 See `scripts/phase-3/custom_sg_config_rule_lambda.py` for the reference
 implementation and `policies/phase-3/3.2-custom-rule-lambda-exec.json` for the

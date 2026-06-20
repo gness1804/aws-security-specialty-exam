@@ -88,7 +88,12 @@ def create_lambda(
 
 
 def add_service_invoke(
-    lam, name: str, statement_id: str, principal: str, source_arn: str | None = None
+    lam,
+    name: str,
+    statement_id: str,
+    principal: str,
+    source_arn: str | None = None,
+    source_account: str | None = None,
 ) -> None:
     kwargs = {
         "FunctionName": name,
@@ -98,6 +103,10 @@ def add_service_invoke(
     }
     if source_arn:
         kwargs["SourceArn"] = source_arn
+    # SourceAccount is the confused-deputy guard for service principals (e.g. Config)
+    # that don't pass a per-resource SourceArn: only this account can invoke.
+    if source_account:
+        kwargs["SourceAccount"] = source_account
     try:
         lam.add_permission(**kwargs)
     except lam.exceptions.ResourceConflictException:

@@ -56,14 +56,19 @@ def build(session: boto3.Session, apply: bool) -> int:
     iam = session.client("iam")
     lam = session.client("lambda")
     config = session.client("config")
+    account = session.client("sts").get_caller_identity()["Account"]
     try:
         role_arn = _deploy.ensure_role(iam, ROLE_NAME, POLICY_NAME, EXEC_POLICY)
         fn_arn = _deploy.create_lambda(
             lam, FUNCTION_NAME, role_arn, HANDLER.stem, _deploy.build_zip(HANDLER)
         )
         print(f"[ok] deployed {FUNCTION_NAME}")
-        _deploy.add_service_invoke(lam, FUNCTION_NAME, "ConfigInvoke", "config.amazonaws.com")
-        print("[ok] granted config.amazonaws.com invoke permission")
+        # Scope the invoke grant to this account so a Config in another account
+        # can't be tricked into invoking the rule with a forged event.
+        _deploy.add_service_invoke(
+            lam, FUNCTION_NAME, "ConfigInvoke", "config.amazonaws.com", source_account=account
+        )
+        print("[ok] granted config.amazonaws.com invoke permission (SourceAccount-scoped)")
         config.put_config_rule(
             ConfigRule={
                 "ConfigRuleName": RULE_NAME,
