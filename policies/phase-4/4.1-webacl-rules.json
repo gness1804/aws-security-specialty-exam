@@ -1,0 +1,57 @@
+{
+  "_comment": "Phase 4.1 — WAF v2 Web ACL rules for an ALB (scope REGIONAL). Two AWS managed rule groups (XSS via the common set, SQLi via the SQLi set) plus one custom XssMatchStatement on the query string with text transformations to defeat encoding evasion. The Web ACL DefaultAction is Allow; these rules Block. Priorities evaluate low->high. Used by scripts/phase-4/setup_waf_alb.py.",
+  "DefaultAction": { "Allow": {} },
+  "Rules": [
+    {
+      "Name": "AWS-CommonRuleSet",
+      "Priority": 0,
+      "Statement": {
+        "ManagedRuleGroupStatement": {
+          "VendorName": "AWS",
+          "Name": "AWSManagedRulesCommonRuleSet"
+        }
+      },
+      "OverrideAction": { "None": {} },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "AWSCommonRuleSet"
+      }
+    },
+    {
+      "Name": "AWS-SQLiRuleSet",
+      "Priority": 1,
+      "Statement": {
+        "ManagedRuleGroupStatement": {
+          "VendorName": "AWS",
+          "Name": "AWSManagedRulesSQLiRuleSet"
+        }
+      },
+      "OverrideAction": { "None": {} },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "AWSSQLiRuleSet"
+      }
+    },
+    {
+      "Name": "Custom-XSS-QueryString",
+      "Priority": 2,
+      "Statement": {
+        "XssMatchStatement": {
+          "FieldToMatch": { "QueryString": {} },
+          "TextTransformations": [
+            { "Priority": 0, "Type": "URL_DECODE" },
+            { "Priority": 1, "Type": "HTML_ENTITY_DECODE" }
+          ]
+        }
+      },
+      "Action": { "Block": {} },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "CustomXSSQueryString"
+      }
+    }
+  ]
+}

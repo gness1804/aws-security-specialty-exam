@@ -1,0 +1,31 @@
+{
+  "_comment": "Phase 4.2 — S3 bucket policy that lets CloudTrail (and only CloudTrail) deliver log files. GetBucketAcl lets CloudTrail check the bucket; PutObject is constrained to the AWSLogs/<acct> prefix and requires bucket-owner-full-control plus aws:SourceArn = the trail ARN (confused-deputy guard). Replace BUCKET, ACCOUNT_ID, REGION, TRAIL_NAME. For an organization trail to a log-archive account, broaden the key path to AWSLogs/<orgId>/* and add aws:SourceAccount. Used by scripts/phase-4/setup_org_cloudtrail.py.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": { "Service": "cloudtrail.amazonaws.com" },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::BUCKET",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceArn": "arn:aws:cloudtrail:REGION:ACCOUNT_ID:trail/TRAIL_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": { "Service": "cloudtrail.amazonaws.com" },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::BUCKET/AWSLogs/ACCOUNT_ID/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control",
+          "aws:SourceArn": "arn:aws:cloudtrail:REGION:ACCOUNT_ID:trail/TRAIL_NAME"
+        }
+      }
+    }
+  ]
+}
