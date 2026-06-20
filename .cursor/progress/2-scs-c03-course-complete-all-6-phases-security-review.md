@@ -1,7 +1,7 @@
 ---
 github_issue: 2
 ---
-# Scs C03 Course Complete All 6 Phases Security Review
+# SCS-C03 course complete — all 6 phases + security review
 
 ## Working directory
 
