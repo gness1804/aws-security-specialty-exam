@@ -1,0 +1,37 @@
+{
+  "_comment": "Phase 5.1 SCP — region lock. Denies any action whose aws:RequestedRegion is NOT in the approved list, EXCEPT global services (NotAction), which use global/us-east-1 endpoints and would break (sign-in, role assumption, DNS, billing) under a naive region deny. Edit the approved regions to taste. Attach to your LAB OU, never the org root while learning. SCPs grant nothing; this only narrows the ceiling.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyOutsideApprovedRegions",
+      "Effect": "Deny",
+      "NotAction": [
+        "iam:*",
+        "sts:*",
+        "organizations:*",
+        "cloudfront:*",
+        "route53:*",
+        "route53domains:*",
+        "waf:*",
+        "wafv2:*",
+        "shield:*",
+        "support:*",
+        "globalaccelerator:*",
+        "budgets:*",
+        "ce:*",
+        "cur:*",
+        "health:*",
+        "trustedadvisor:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "us-east-1",
+            "us-west-2"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "_comment": "Phase 6.2 — a deliberately mixed identity policy for the IAM Policy Simulator drill. It ALLOWS S3 read/list broadly, EXPLICITLY DENIES deleting buckets, and allows StartInstances only when MFA is present. Simulate actions against it with scripts/phase-6/run_policy_simulator.py to see explicitDeny (DeleteBucket), allowed (GetObject), and implicitDeny + MissingContextValues (StartInstances without aws:MultiFactorAuthPresent). NOTE: this uses plain Bool, not BoolIfExists, on purpose -- with Bool, an ABSENT MFA key fails the condition so the drill shows the deny + MissingContextValues; pass --mfa to flip it to allowed. (Contrast Phase 5's require-MFA SCP, which uses BoolIfExists because a DENY-when-no-MFA must not fire on contexts where the key is legitimately absent.) Nothing here is deployed -- it's input for simulate_custom_policy.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowS3Read",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ExplicitDenyBucketDeletion",
+      "Effect": "Deny",
+      "Action": "s3:DeleteBucket",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowStartInstancesWithMFA",
+      "Effect": "Allow",
+      "Action": "ec2:StartInstances",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:MultiFactorAuthPresent": "true"
+        }
+      }
+    }
+  ]
+}

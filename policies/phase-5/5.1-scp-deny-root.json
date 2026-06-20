@@ -1,0 +1,17 @@
+{
+  "_comment": "Phase 5.1 SCP — deny the root user in MEMBER accounts. Denies all actions when the calling principal is the account root, forcing the use of IAM roles/users instead. Safe for member accounts (you administer them from elsewhere). NEVER rely on this for the management account -- SCPs do not apply to the management account, and its root is your recovery path. Attach to the lab OU only.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyRootUser",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:root"
+        }
+      }
+    }
+  ]
+}

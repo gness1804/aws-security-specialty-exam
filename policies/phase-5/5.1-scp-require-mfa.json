@@ -1,0 +1,28 @@
+{
+  "_comment": "Phase 5.1 SCP — require MFA for sensitive actions. Denies a set of high-impact actions when aws:MultiFactorAuthPresent is false. Uses BoolIfExists (not Bool): the key is absent in some service-to-service contexts, and BoolIfExists only enforces when the key is present, avoiding breakage. Narrow the action list to genuinely sensitive operations -- a blanket deny-when-no-MFA can lock out automation/roles that legitimately don't carry MFA context.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenySensitiveActionsWithoutMFA",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:TerminateInstances",
+        "ec2:StopInstances",
+        "ec2:DeleteVpc",
+        "s3:DeleteBucket",
+        "s3:DeleteBucketPolicy",
+        "kms:ScheduleKeyDeletion",
+        "kms:DisableKey",
+        "iam:DeleteRole",
+        "iam:DeleteUser",
+        "rds:DeleteDBInstance"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "BoolIfExists": {
+          "aws:MultiFactorAuthPresent": "false"
+        }
+      }
+    }
+  ]
+}

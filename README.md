@@ -126,7 +126,7 @@ Stretch labs are in _italics_.
 3. **AWS CLI v2 + Python 3.11+ with Boto3.** Use named profiles, never long-lived
    root keys. Recommended:
    ```bash
-   python3 -m venv .venv && source .venv/bin/activate && pip install boto3
+   python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
    aws configure --profile scs-mgmt     # management account, IAM user with MFA
    aws configure --profile scs-member    # member account admin role
    ```

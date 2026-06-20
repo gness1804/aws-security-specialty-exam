@@ -1,0 +1,26 @@
+{
+  "_comment": "Phase 4.3 — bucket policy that explicitly denies object deletion and tampering with the Object Lock configuration, to ALL principals (Principal *). An explicit deny binds every principal in the account INCLUDING root while the policy exists -- but root can PutBucketPolicy to remove it, which is why this is defense-in-depth layered UNDER S3 Object Lock COMPLIANCE mode (the real WORM guarantee). Replace BUCKET. Used by scripts/phase-4/setup_s3_object_lock.py.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyObjectDeletion",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": [
+        "s3:DeleteObject",
+        "s3:DeleteObjectVersion"
+      ],
+      "Resource": "arn:aws:s3:::BUCKET/*"
+    },
+    {
+      "Sid": "DenyWeakeningObjectLock",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": [
+        "s3:PutBucketObjectLockConfiguration",
+        "s3:BypassGovernanceRetention"
+      ],
+      "Resource": "arn:aws:s3:::BUCKET"
+    }
+  ]
+}

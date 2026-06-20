@@ -1,0 +1,19 @@
+{
+  "_comment": "Phase 4.5 — CloudWatch Logs metric-filter patterns over CloudTrail JSON events. These are the canonical CIS AWS Foundations monitoring controls. Each pattern, when it matches a log event, increments a CloudWatch custom metric (metricValue 1) that an alarm watches with threshold >= 1. Used by scripts/phase-4/setup_cw_metric_alarms.py.",
+  "filters": [
+    {
+      "name": "RootAccountUsage",
+      "metricName": "RootAccountUsageCount",
+      "metricNamespace": "SecurityMetrics",
+      "comment": "CIS 1.x — alert on any use of the root account by a human (excludes AWS-service-initiated events).",
+      "pattern": "{ $.userIdentity.type = \"Root\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != \"AwsServiceEvent\" }"
+    },
+    {
+      "name": "IAMPolicyChanges",
+      "metricName": "IAMPolicyChangeCount",
+      "metricNamespace": "SecurityMetrics",
+      "comment": "CIS — alert on IAM policy create/attach/detach/delete/put changes.",
+      "pattern": "{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName = AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }"
+    }
+  ]
+}

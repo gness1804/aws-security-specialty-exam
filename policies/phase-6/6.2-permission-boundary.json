@@ -1,0 +1,15 @@
+{
+  "_comment": "Phase 6.2 — a permission boundary NARROWER than the identity policy. It permits only S3 read. Simulate ec2:StartInstances with this as the boundary (PermissionsBoundaryPolicyInputList) and the identity policy above as the identity policy: the identity policy allows it, but it falls OUTSIDE the boundary, so EvalDecision = implicitDeny. Demonstrates that effective permissions are the INTERSECTION of policy and boundary; a boundary grants nothing, it only caps.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BoundaryAllowOnlyS3Read",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

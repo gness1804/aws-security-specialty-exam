@@ -1,0 +1,49 @@
+{
+  "_comment": "Phase 5.1 SCP — protect the detective controls. Denies disabling/deleting CloudTrail, GuardDuty, Config, and Security Hub so that even a full-admin user in a member account cannot blind the org's monitoring. Attach to the lab OU. An SCP deny sits above IAM, so account-local admin rights can't override it.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ProtectCloudTrail",
+      "Effect": "Deny",
+      "Action": [
+        "cloudtrail:StopLogging",
+        "cloudtrail:DeleteTrail",
+        "cloudtrail:UpdateTrail",
+        "cloudtrail:PutEventSelectors"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ProtectGuardDuty",
+      "Effect": "Deny",
+      "Action": [
+        "guardduty:DeleteDetector",
+        "guardduty:DisassociateFromMasterAccount",
+        "guardduty:UpdateDetector",
+        "guardduty:StopMonitoringMembers"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ProtectConfig",
+      "Effect": "Deny",
+      "Action": [
+        "config:DeleteConfigurationRecorder",
+        "config:StopConfigurationRecorder",
+        "config:DeleteDeliveryChannel",
+        "config:DeleteConfigRule"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ProtectSecurityHub",
+      "Effect": "Deny",
+      "Action": [
+        "securityhub:DisableSecurityHub",
+        "securityhub:DeleteMembers",
+        "securityhub:DisassociateFromAdministratorAccount"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
