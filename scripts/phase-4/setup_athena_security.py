@@ -35,6 +35,7 @@ TABLE = "cloudtrail_logs"
 # interpolated into Athena SQL (defense against DDL injection from a bad arg).
 _BUCKET_RE = re.compile(r"^[a-z0-9.-]{3,63}$")
 _REGION_RE = re.compile(r"^[a-z]{2}-[a-z]+-\d$")
+_ACCOUNT_RE = re.compile(r"^\d{12}$")
 
 
 def _validate(bucket: str, region: str) -> str | None:
@@ -133,7 +134,11 @@ def build(
     if not ct_bucket or not results_bucket:
         print("[error] --cloudtrail-bucket and --results-bucket are required with --apply")
         return 1
-    err = _validate(ct_bucket, region) or _validate(results_bucket, region)
+    err = (
+        _validate(ct_bucket, region)
+        or _validate(results_bucket, region)
+        or (None if _ACCOUNT_RE.match(account) else f"invalid account id: {account!r}")
+    )
     if err:
         print(f"[error] {err}")
         return 1
