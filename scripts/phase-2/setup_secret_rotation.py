@@ -141,14 +141,17 @@ def build(session: boto3.Session, region: str, account: str, apply: bool) -> int
         fn_arn = fn["FunctionArn"]
         print(f"[ok] created function {FUNCTION_NAME}")
 
-        # 4. Resource policy so Secrets Manager can invoke it.
+        # 4. Resource policy so Secrets Manager can invoke it. SourceAccount scopes
+        #    the grant to this account (confused-deputy guard) so a Secrets Manager
+        #    principal in another account can't trigger this rotation function.
         lam.add_permission(
             FunctionName=FUNCTION_NAME,
             StatementId="SecretsManagerInvoke",
             Action="lambda:InvokeFunction",
             Principal="secretsmanager.amazonaws.com",
+            SourceAccount=account,
         )
-        print("[ok] granted secretsmanager.amazonaws.com invoke permission")
+        print("[ok] granted secretsmanager.amazonaws.com invoke permission (SourceAccount-scoped)")
 
         # 5. Enable rotation.
         sm.rotate_secret(

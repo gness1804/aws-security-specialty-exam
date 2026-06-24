@@ -30,23 +30,38 @@ ROLE_NAME = "scs-phase3-gd-nacl-block-role"
 POLICY_NAME = "nacl-block"
 RULE_NAME = "scs-guardduty-findings"
 
-EXEC_POLICY = {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "ManageNaclDenyEntries",
-            "Effect": "Allow",
-            "Action": ["ec2:DescribeNetworkAcls", "ec2:CreateNetworkAclEntry"],
-            "Resource": "*",
-        },
-        {
-            "Sid": "Logs",
-            "Effect": "Allow",
-            "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-            "Resource": "*",
-        },
-    ],
-}
+
+def exec_policy(region: str, account: str, nacl_id: str) -> dict:
+    """Least-privilege exec policy for the NACL-block Lambda.
+
+    DescribeNetworkAcls has no resource-level support, so it stays on "*";
+    CreateNetworkAclEntry is scoped to the one NACL this Lambda manages.
+    """
+    nacl_arn = f"arn:aws:ec2:{region}:{account}:network-acl/{nacl_id}"
+    return {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "DescribeNacls",
+                "Effect": "Allow",
+                "Action": "ec2:DescribeNetworkAcls",
+                "Resource": "*",
+            },
+            {
+                "Sid": "AddNaclDenyEntries",
+                "Effect": "Allow",
+                "Action": "ec2:CreateNetworkAclEntry",
+                "Resource": nacl_arn,
+            },
+            {
+                "Sid": "Logs",
+                "Effect": "Allow",
+                "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+                "Resource": "*",
+            },
+        ],
+    }
+
 
 # Start broad (all findings), then narrow by severity in production.
 EVENT_PATTERN = {
@@ -69,8 +84,11 @@ def build(session: boto3.Session, nacl_id: str, apply: bool) -> int:
     iam = session.client("iam")
     lam = session.client("lambda")
     events = session.client("events")
+    account = session.client("sts").get_caller_identity()["Account"]
     try:
-        role_arn = _deploy.ensure_role(iam, ROLE_NAME, POLICY_NAME, EXEC_POLICY)
+        role_arn = _deploy.ensure_role(
+            iam, ROLE_NAME, POLICY_NAME, exec_policy(session.region_name, account, nacl_id)
+        )
         fn_arn = _deploy.create_lambda(
             lam,
             FUNCTION_NAME,

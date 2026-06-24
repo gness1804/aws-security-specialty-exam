@@ -51,7 +51,9 @@ REMEDIATION_PERMS = {
                 "s3:DeleteBucketPolicy",
                 "s3:GetBucketPolicy",
             ],
-            "Resource": "arn:aws:s3:::*",
+            # Lab buckets are named scs-*; scope the remediation role to them
+            # rather than every bucket in the account. Widen for production use.
+            "Resource": "arn:aws:s3:::scs-*",
         }
     ],
 }
